@@ -1,0 +1,4 @@
+- insert:
+    - id: dsh-spawn-agent
+      name: '@dsh-external/dsh-spawn-agent'
+      config: {}
