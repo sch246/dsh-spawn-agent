@@ -32,11 +32,13 @@ Relevant verification uses the real composed profile to start at least two child
 - The plugin does not promise that every adapter can execute every identifier. In particular, removing plugin preflight cannot make an adapter with a closed executable model set accept an unconfigured model.
 - Returning a child id must not be described as proof that its first provider request succeeded; the target continuable lifecycle may accept the inbox before execution.
 
-## Conditional decisions
+## Target-dependent commitments
 
-- If a target runtime supports virtual provider routes through middleware, do not add a registered-adapter prerequisite merely for early validation.
-- If the deployment chooses an authorization allowlist for subagent model use, that policy must be applied as an explicit authorization capability rather than inferred from discovery or adapter configuration. This package does not silently invent that policy.
-- Exact labels, error copy and the carrier provider may follow the target until the user identifies them as retained behavior.
+- When the target runtime supports virtual provider routes through middleware, `spawn_agent` accepts those routes without requiring a registered adapter merely for early validation.
+- When the deployment has an explicit authorization allowlist for subagent model use, `spawn_agent` respects that authorization capability. A target without such a policy does not gain one from discovery or adapter configuration.
+- When the target's continuable lifecycle accepts an inbox before executing its first provider call, the tool distinguishes child creation from provider success and leaves later failure visible through that lifecycle. A target that executes before returning may report the same adapter failure synchronously instead.
+
+Exact labels, error copy and the carrier provider are not yet locked behavior and may follow the target until the user says one must remain.
 
 ## Non-goals
 
