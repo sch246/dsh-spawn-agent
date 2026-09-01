@@ -18,7 +18,7 @@ import z from '@deepseek-ai/schemastery'
 import type {} from '@deepseek-ai/dsh-subagent'
 
 export const name = '@dsh-external/dsh-spawn-agent'
-export const inject = ['tools', 'subagents', 'llm']
+export const inject = ['tools', 'subagents']
 
 export interface Config {
   /** 承载子代理的 subagent provider 名（默认 `spawn`，官方 fresh-child continuable provider）。 */
@@ -35,8 +35,8 @@ export function apply(ctx: Context, config: Config): void {
     description:
       'Spawn a background subagent that runs on a caller-chosen LLM provider + model and stays '
       + 'chat-continuable. Use it to run several children each on a DIFFERENT model in parallel; the '
-      + 'returned subagent id is continued with `send_message`. provider/model must be exact values '
-      + 'from `list_models`.',
+      + 'returned subagent id is continued with `send_message`. `list_models` is optional discovery: '
+      + 'an unlisted provider-interpreted model id may still be used.',
     parameters: {
       description: {
         type: 'string',
@@ -51,12 +51,12 @@ export function apply(ctx: Context, config: Config): void {
       provider: {
         type: 'string',
         required: true,
-        description: 'Exact LLM provider route for this child (from list_models).',
+        description: 'LLM provider route for this child; list_models may suggest one but is not an allowlist.',
       },
       model: {
         type: 'string',
         required: true,
-        description: 'Exact model id for this child (from list_models).',
+        description: 'Provider-interpreted model id; it may be absent from local discovery or settings.',
       },
     },
     output: {
@@ -77,15 +77,8 @@ export function apply(ctx: Context, config: Config): void {
       if (!parent) {
         throw new Error('spawn_agent requires a calling agent (exec.agent was undefined)')
       }
-      // provider/model 是模型输入（untrusted 边界）：fail loud，别等首轮子代理运行期才爆。
-      try {
-        await ctx.llm.resolveModelInfo(args.provider, args.model, exec.signal)
-      } catch (error: unknown) {
-        throw new Error(
-          `spawn_agent: invalid provider/model "${args.provider}/${args.model}" — `
-          + `${error instanceof Error ? error.message : String(error)}. Use list_models for valid values.`,
-        )
-      }
+      if (args.provider.trim() === '') throw new Error('spawn_agent requires a non-empty provider route')
+      if (args.model.trim() === '') throw new Error('spawn_agent requires a non-empty model id')
       const started = await ctx.subagents.startContinuable({
         provider: config.subagentProvider,
         label: args.description,
