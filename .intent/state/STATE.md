@@ -1,6 +1,6 @@
 # DSH spawn-agent
 
-Status: draft product map for independent selectable-model delegation retained while `super-injector` retires. The current alpha.2 candidate is installed but not yet accepted through a realization lock.
+Status: draft product map for independent selectable-model delegation retained while `super-injector` retires. Earlier records report an installed alpha.2 candidate; its current deployment and semantic acceptance are not established here.
 
 ## Product direction
 
@@ -18,12 +18,48 @@ Let a parent Agent start continuable children on caller-selected provider and mo
 
 Relevant verification uses the real composed profile to start at least two children on different routes, continue both, and inspect the provider/model actually used. It also attempts an identifier omitted from advisory discovery and distinguishes plugin acceptance from the adapter's later execution decision.
 
-## Current alpha.2 realization map
+## Installation and maintenance map
 
-- Build the package against the selected Harness source checkout so its declarations and runtime imports resolve the same alpha.2 subagent and tool APIs as the profile.
-- Install the package checkout through `dsh plugin --profile <name> add <checkout>`. Its package manifest must contribute its own Bundle patch, and the profile must contain both the dependency and the Bundle membership.
-- Restart the profile after Bundle membership changes. Confirm the composed config contains exactly one `dsh-spawn-agent` row and no `super-injector` owner for `spawn_agent`.
-- Perform the real multi-model and continuation observations above before accepting a realization. Build, profile resolution and child-id creation alone do not establish end-to-end success.
+The recorded target is Harness alpha.2 at the revision in `STATE.json.resources`; it is compatibility evidence, not a permanent runtime requirement or proof of the present deployment. No realization lock is selected. Start here for current effects and operations; selected LOGs explain consequential choices, and any historical LOCK is optional recovery evidence.
+
+### Sources, ownership and data
+
+`src/index.ts` registers `spawn_agent` over the Host continuable-subagent service. `Config.subagentProvider` selects the carrier (currently `spawn`); caller-selected LLM provider/model live in the child descriptor. The Host owns child persistence, continuation, cancellation and execution. This repository carries no Host patch and no separate runtime data store.
+
+The [manifest](../../package.json), [Bundle patch](../../cordis.patch.yml) and [build script](../../scripts/build.sh) own the current executable paths. Read the selected Harness checkout’s `apps/cli/reference/README.md` for profile composition and `docs/development.md` for its build prerequisites. Build against the same checkout that will run the profile, with its dependencies and required peer artifacts ready. Build scripts create local dependency links and `lib/`; these are replaceable outputs, unlike runtime data.
+
+### Build, compose and remove
+
+Set absolute paths and the intended profile; run the build from this plugin checkout. The commands describe installation operations, not actions performed by this document update.
+
+```bash
+export DSH_CHECKOUT=/absolute/path/to/deepseek-harness
+export DSH_HOME=/absolute/path/to/dsh-home
+PROFILE=web
+PLUGIN=/absolute/path/to/dsh-spawn-agent
+cd "$PLUGIN"
+DSH_CHECKOUT="$DSH_CHECKOUT" bash scripts/build.sh
+cd "$DSH_CHECKOUT"
+pnpm dsh plugin --profile "$PROFILE" add "$PLUGIN"
+pnpm dsh plugin --profile "$PROFILE" why @dsh-external/dsh-spawn-agent
+pnpm dsh --profile "$PROFILE" --dump-config
+```
+
+For a requested removal, use the same environment and run from the Harness checkout:
+
+```bash
+pnpm dsh plugin --profile "$PROFILE" remove @dsh-external/dsh-spawn-agent
+```
+
+`dsh plugin` maintains the profile dependency, pnpm lockfile, installed resolution and `dsh.profile.bundles` together. After add/update/remove, inspect all four under `$DSH_HOME/profiles/$PROFILE` and the composed config: exactly one `dsh-spawn-agent` row when installed, none when removed. Later profile/home patches replace a row’s complete config, so preserve existing overrides. A running profile retains its startup Bundle set; activation needs an authorized restart, then a fresh-session check for duplicate tool owners, including residual `super-injector` entries. For first install or changed composition, validate a candidate with the target package set in a private Home before changing a managed profile.
+
+### Upgrade and verification
+
+After a Harness upgrade, inspect `startContinuable`, agent options and descriptor/resume behavior in the target before adapting `src/index.ts`. Preserve permissive routing and child identity; a new catalog API is not a reason to add a creation allowlist. If native composition supplies the same tool, choose one owner and remove the duplicate contribution. Add a locally marked, attributable Host patch only if a required effect has no usable native extension; retire it when upstream supplies that effect.
+
+There is no package test script. The build checks TypeScript compatibility; the multi-route, continuation, cold-resume and unlisted-identifier observations above require a composed profile and real provider calls. Include an unavailable route and a cancelled/failed child; a returned id alone is not provider success.
+
+Retain Host sessions and child descriptors. Removal disables future `spawn_agent` calls; it does not erase existing children or their ordinary continuation service.
 
 ## Conditional avoidance
 

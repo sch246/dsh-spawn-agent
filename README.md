@@ -20,12 +20,6 @@
 - continuable lifecycle 在接收 child inbox 后即可返回 `{ subagentId }`。若 adapter 不支持所选 id，失败会作为该子代理的普通首轮错误返回，而不是被本插件误报成“模型无效”。
 - 可配置 `Config.subagentProvider`（默认 `spawn`），cordis.yml 可改承载 provider。
 
-## 构建与安装
+## 安装与维护
 
-```bash
-DSH_CHECKOUT=<checkout> bash scripts/build.sh
-cd <checkout>
-DSH_HOME=<home> pnpm dsh plugin --profile web add /root/dsh-spawn-agent
-```
-
-插件自带 Bundle 层，安装后重启对应 profile 即可；不依赖 `super-injector`。
+构建、profile 安装、升级适配、卸载、数据保留和验证入口见 [STATE 安装维护地图](.intent/state/STATE.md#installation-and-maintenance-map)。STATE 区分用户要求保留的效果与当前实现；历史安装记录不代表当前部署已验证。
